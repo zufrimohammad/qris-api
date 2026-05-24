@@ -3,73 +3,131 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>QRIS Converter - Bootstrap UI</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>QRIS Kasir Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="ui.css">
 </head>
-<body class="bg-light">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <header class="text-center mb-5">
-                    <h1 class="display-4 fw-bold text-primary">QRIS Converter</h1>
-                    <p class="lead text-muted">
-                        UI untuk mencoba endpoint <code>/convert</code>. 
-                        Dokumentasi OpenAPI di <a class="text-decoration-none" href="/docs" target="_blank">/docs</a>.
-                    </p>
-                </header>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div id="app" class="w-full max-w-lg mx-auto p-4">
 
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-body p-4 p-md-5">
-                        <form id="form" class="mb-5">
-                            <div class="mb-4">
-                                <label for="qrUpload" class="form-label fw-bold">Upload Gambar QRIS</label>
-                                <input class="form-control rounded-3" type="file" id="qrUpload" accept="image/*">
-                                <div class="form-text">Atau masukkan string QRIS secara manual di bawah.</div>
-                            </div>
-                            <div class="mb-4">
-                                <label for="qris" class="form-label fw-bold">QRIS String</label>
-                                <textarea id="qris" name="qris" placeholder="Masukkan data QRIS di sini..." required class="form-control rounded-3" rows="5"></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label for="nominal" class="form-label fw-bold">Nominal</label>
-                                <input id="nominal" name="nominal" type="text" placeholder="Contoh: 10000" required class="form-control rounded-3" />
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg px-4 rounded-3">Convert Now</button>
-                                <button type="button" id="reset" class="btn btn-outline-secondary btn-lg px-4 rounded-3">Reset Form</button>
-                            </div>
-                        </form>
+        <!-- ========== STATE: INPUT ========== -->
+        <div id="state-input" class="state-view">
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <div class="text-center mb-6">
+                    <h1 class="text-2xl font-bold text-gray-800">💳 QRIS Kasir</h1>
+                    <p class="text-gray-500 text-sm mt-1">Generate QR pembayaran dinamis</p>
+                </div>
 
-                        <hr class="my-5">
+                <form id="form-create" class="space-y-5">
+                    <div>
+                        <label for="nominal" class="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
+                        <input
+                            id="nominal"
+                            type="number"
+                            min="1"
+                            placeholder="Contoh: 50000"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        />
+                    </div>
 
-                        <div class="row g-4">
-                            <div class="col-md-7">
-                                <h2 class="h4 mb-3 fw-bold border-start border-primary border-4 ps-2">Hasil Konversi</h2>
-                                <div class="bg-dark text-white p-3 rounded-3 overflow-auto" style="min-height: 250px;">
-                                    <pre id="output" class="mb-0 m-0 text-info">Belum ada hasil</pre>
-                                </div>
-                            </div>
-                            <div class="col-md-5 text-center">
-                                <h2 class="h4 mb-3 fw-bold border-start border-primary border-4 ps-2 text-start">QR Preview</h2>
-                                <div id="qr-box" class="bg-white border rounded-3 d-flex align-items-center justify-content-center" style="min-height: 250px;">
-                                    <span class="text-muted">Belum ada QR</span>
-                                </div>
-                            </div>
+                    <div>
+                        <label for="qris" class="block text-sm font-medium text-gray-700 mb-1">QRIS String (Static)</label>
+                        <textarea
+                            id="qris"
+                            rows="3"
+                            placeholder="Paste static QRIS merchant di sini..."
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
+                        ></textarea>
+                    </div>
+
+                    <!-- Sound Toggle -->
+                    <div class="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span id="sound-icon" class="text-xl">🔊</span>
+                            <span class="text-sm text-gray-700">Notifikasi Suara</span>
                         </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="sound-toggle" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <button
+                        type="submit"
+                        id="btn-generate"
+                        class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-lg transition active:scale-[0.98]"
+                    >
+                        Generate QR
+                    </button>
+
+                    <div id="error-message" class="hidden text-red-600 text-sm text-center bg-red-50 rounded-xl p-3"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========== STATE: WAITING ========== -->
+        <div id="state-waiting" class="state-view hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 text-center">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Scan QR untuk Membayar</h2>
+
+                <div id="qr-container" class="flex justify-center mb-5">
+                    <img id="qr-image" src="" alt="QR Code" class="w-64 h-64 rounded-xl border-2 border-gray-200 shadow-sm" />
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-4 mb-5 space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Nominal</span>
+                        <span id="info-nominal" class="font-semibold text-gray-800">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Kode Unik</span>
+                        <span id="info-unique" class="font-semibold text-orange-600">-</span>
+                    </div>
+                    <div class="flex justify-between border-t pt-2">
+                        <span class="text-gray-700 font-medium">Total Bayar</span>
+                        <span id="info-total" class="font-bold text-blue-700 text-base">-</span>
                     </div>
                 </div>
 
-                <footer class="text-center mt-5 text-muted small">
-                    &copy; 2026 QRIS Converter API - Built with Bootstrap 5
-                </footer>
+                <!-- Waiting animation -->
+                <div class="waiting-pulse flex items-center justify-center gap-3 text-gray-500">
+                    <div class="spinner"></div>
+                    <span class="text-sm">Menunggu Pembayaran...</span>
+                </div>
+
+                <button
+                    id="btn-cancel"
+                    class="mt-5 text-sm text-gray-400 hover:text-gray-600 underline transition"
+                >
+                    Batalkan
+                </button>
             </div>
         </div>
+
+        <!-- ========== STATE: SUCCESS ========== -->
+        <div id="state-success" class="state-view hidden">
+            <div class="success-screen rounded-2xl shadow-lg p-8 text-center text-white">
+                <div class="text-6xl mb-4">✅</div>
+                <h2 class="text-2xl font-bold mb-2">PEMBAYARAN SUKSES</h2>
+                <p id="success-amount" class="text-4xl font-extrabold mb-6">Rp 0</p>
+                <p id="success-merchant" class="text-green-100 text-sm mb-8">-</p>
+
+                <button
+                    id="btn-new-transaction"
+                    class="bg-white text-green-700 font-semibold px-8 py-3 rounded-xl hover:bg-green-50 transition active:scale-[0.98]"
+                >
+                    Transaksi Baru
+                </button>
+            </div>
+            <!-- Confetti canvas -->
+            <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+        </div>
+
     </div>
-    
-    <!-- Bootstrap 5 Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="ui.js" defer></script>
+
+    <script src="ui.js"></script>
 </body>
 </html>

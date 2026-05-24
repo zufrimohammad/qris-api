@@ -1,27 +1,150 @@
-/* Custom Overrides for Bootstrap UI */
+/* ========== QRIS Kasir Dashboard Styles ========== */
+
+/* State visibility */
+.state-view {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.state-view.hidden {
+  display: none;
+}
+
+/* ========== WAITING STATE ========== */
+
+/* Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pulse animation for waiting */
+.waiting-pulse {
+  animation: pulse-fade 2s ease-in-out infinite;
+}
+
+@keyframes pulse-fade {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* QR image pulse border while waiting */
+#qr-image {
+  animation: qr-pulse 2.5s ease-in-out infinite;
+}
+
+#state-waiting #qr-image {
+  animation: qr-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes qr-pulse {
+  0%, 100% { border-color: #e5e7eb; box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+  50% { border-color: #3b82f6; box-shadow: 0 0 0 8px rgba(59,130,246,0.1); }
+}
+
+/* ========== SUCCESS STATE ========== */
+
+.success-screen {
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: success-appear 0.5s ease-out;
+}
+
+@keyframes success-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Flash effect for visual fallback */
+.flash-screen {
+  animation: flash 0.6s ease-out;
+}
+
+@keyframes flash {
+  0% { background-color: #fff; }
+  25% { background-color: #d1fae5; }
+  50% { background-color: #6ee7b7; }
+  75% { background-color: #d1fae5; }
+  100% { background-color: transparent; }
+}
+
+/* ========== CONFETTI ========== */
+
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  z-index: 100;
+  animation: confetti-fall 3s ease-in forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (min-width: 768px) {
+  #app {
+    max-width: 480px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #app {
+    max-width: 500px;
+  }
+}
+
+/* Tablet landscape - kasir mode */
+@media (min-width: 768px) and (orientation: landscape) {
+  body {
+    padding: 2rem;
+  }
+
+  .success-screen {
+    min-height: 450px;
+  }
+}
+
+/* ========== GENERAL ========== */
 
 body {
-    min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-pre {
-    white-space: pre-wrap;
-    word-break: break-all;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    font-size: 0.875rem;
+/* Remove number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-#qr-box img {
-    max-width: 100%;
-    height: auto;
-}
-
-/* Success/Error states for the QR box */
-.qr-success {
-    border: 2px solid #198754 !important; /* Bootstrap success color */
-}
-
-.qr-error {
-    background-color: #f8d7da !important; /* Bootstrap danger subtle bg */
-    border: 1px solid #f5c2c7 !important;
+input[type="number"] {
+  -moz-appearance: textfield;
 }

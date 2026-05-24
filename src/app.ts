@@ -9,12 +9,20 @@ import { QrisInput } from './types/qris.type';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { redisRateLimit } from './utils/redis.util';
+import { TransactionService } from './services/transaction.service';
+import { WebSocketService } from './services/websocket.service';
+import { WebhookController } from './controllers/webhook.controller';
+import { CashierController } from './controllers/cashier.controller';
 
 const app = new Elysia();
 
 
 const qrisController = new QrisController();
 const qrisService = new QrisService();
+export const transactionService = new TransactionService();
+export const webSocketService = new WebSocketService();
+const webhookController = new WebhookController(transactionService, webSocketService);
+const cashierController = new CashierController(transactionService, qrisService);
 
 app.use(
     swagger({
@@ -31,6 +39,90 @@ app.use(
         },
         path: '/docs'
     })
+);
+
+app.ws('/ws/transaction/:transactionId', {
+  open(ws) {
+    const transactionId = (ws.data as any).params.transactionId;
+    const transaction = transactionService.findById(transactionId);
+
+    if (!transaction) {
+      ws.send(JSON.stringify({ type: 'ERROR', message: 'Transaction not found' }));
+      ws.close();
+      return;
+    }
+
+    webSocketService.subscribe(transactionId, ws);
+  },
+  close(ws) {
+    const transactionId = (ws.data as any).params.transactionId;
+    webSocketService.unsubscribe(transactionId, ws);
+  },
+  message(ws, message) {
+    // No client-to-server messages expected; ignore
+  }
+});
+
+app.post(
+  '/webhook/payment',
+  ({ body }) => {
+    const result = webhookController.handlePayment(body as any);
+    if (result.status === 200) {
+      return { success: true, transactionId: result.transactionId };
+    }
+    return new Response(JSON.stringify({ success: false, error: result.error }), {
+      status: result.status,
+      headers: { 'content-type': 'application/json' },
+    });
+  },
+  {
+    body: t.Union([
+      t.Object({
+        transactionId: t.String({ description: 'ID transaksi yang sudah dibayar' }),
+      }),
+      t.Object({
+        amount: t.Number({ description: 'Jumlah yang ditransfer' }),
+        description: t.String({ description: 'Deskripsi mutasi' }),
+      }),
+    ]),
+    detail: {
+      summary: 'Webhook notifikasi pembayaran',
+      tags: ['Webhook'],
+    },
+  }
+);
+
+app.post(
+  '/cashier/create',
+  ({ body }) => {
+    try {
+      const result = cashierController.createTransaction(body as any);
+      return result;
+    } catch (e: any) {
+      return new Response(JSON.stringify({ error: e?.message || 'Gagal membuat transaksi' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+  },
+  {
+    body: t.Object({
+      nominal: t.Number({ description: 'Nominal transaksi (bilangan bulat positif)' }),
+      qris: t.String({ description: 'String QRIS statis dari merchant' }),
+    }),
+    response: t.Object({
+      transactionId: t.String(),
+      originalAmount: t.Number(),
+      uniqueCode: t.Number(),
+      totalAmount: t.Number(),
+      qrisConverted: t.String(),
+      merchantName: t.String(),
+    }),
+    detail: {
+      summary: 'Buat transaksi kasir baru',
+      tags: ['Cashier'],
+    },
+  }
 );
 
 app.post(
