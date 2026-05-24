@@ -179,7 +179,7 @@ app.get('/qr', async ({ query }) => {
     }
     try {
         const pngBuffer = await QRCode.toBuffer(content, { type: 'png', errorCorrectionLevel: 'M' });
-        return new Response(pngBuffer, { headers: { 'content-type': 'image/png' } });
+        return new Response(new Uint8Array(pngBuffer), { headers: { 'content-type': 'image/png' } });
     } catch (e: any) {
         return new Response(JSON.stringify({ error: e?.message || 'Gagal membuat QR' }), {
             status: 500,
