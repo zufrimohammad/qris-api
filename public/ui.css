@@ -1,82 +1,104 @@
-/* ========== QRIS Kasir Dashboard Styles ========== */
+/* ========== TemanQRIS Clone - Cashier Dashboard Styles ========== */
 
 /* State visibility */
 .state-view {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
-
 .state-view.hidden {
   display: none;
 }
 
-/* ========== WAITING STATE ========== */
+/* ========== DROPZONE ========== */
+.dropzone-area {
+  transition: all 0.2s ease;
+}
+.dropzone-area.drag-over {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  transform: scale(1.01);
+}
+.dropzone-area.has-file {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+  border-style: solid;
+}
 
-/* Spinner */
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #3b82f6;
+/* ========== WAITING STATE ========== */
+.spinner-sm {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #bfdbfe;
+  border-top-color: #2563eb;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* Pulse animation for waiting */
-.waiting-pulse {
-  animation: pulse-fade 2s ease-in-out infinite;
+/* Bouncing dots */
+.dot-bounce {
+  width: 6px;
+  height: 6px;
+  background-color: #9ca3af;
+  border-radius: 50%;
+  animation: dot-bounce 1.4s infinite ease-in-out both;
+}
+.dot-1 { animation-delay: -0.32s; }
+.dot-2 { animation-delay: -0.16s; }
+.dot-3 { animation-delay: 0s; }
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
 }
 
+/* Pulse animation for waiting */
+.waiting-pulse {
+  animation: pulse-fade 2.5s ease-in-out infinite;
+}
 @keyframes pulse-fade {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
-/* QR image pulse border while waiting */
-#qr-image {
-  animation: qr-pulse 2.5s ease-in-out infinite;
-}
-
+/* QR image subtle animation */
 #state-waiting #qr-image {
-  animation: qr-pulse 2.5s ease-in-out infinite;
+  animation: qr-glow 3s ease-in-out infinite;
 }
-
-@keyframes qr-pulse {
-  0%, 100% { border-color: #e5e7eb; box-shadow: 0 0 0 0 rgba(59,130,246,0); }
-  50% { border-color: #3b82f6; box-shadow: 0 0 0 8px rgba(59,130,246,0.1); }
+@keyframes qr-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+  50% { box-shadow: 0 0 20px 4px rgba(59,130,246,0.15); }
 }
 
 /* ========== SUCCESS STATE ========== */
-
 .success-screen {
-  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
-  min-height: 400px;
+  background: linear-gradient(135deg, #047857 0%, #059669 30%, #10b981 70%, #34d399 100%);
+  min-height: 420px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  animation: success-appear 0.5s ease-out;
+  animation: success-appear 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes success-appear {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-@keyframes success-appear {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 /* Flash effect for visual fallback */
 .flash-screen {
   animation: flash 0.6s ease-out;
 }
-
 @keyframes flash {
   0% { background-color: #fff; }
   25% { background-color: #d1fae5; }
@@ -86,7 +108,6 @@
 }
 
 /* ========== CONFETTI ========== */
-
 .confetti-piece {
   position: fixed;
   width: 10px;
@@ -95,47 +116,22 @@
   z-index: 100;
   animation: confetti-fall 3s ease-in forwards;
 }
-
 @keyframes confetti-fall {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh) rotate(720deg);
-    opacity: 0;
-  }
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
 /* ========== RESPONSIVE ========== */
-
 @media (min-width: 768px) {
-  #app {
-    max-width: 480px;
-  }
+  #app { max-width: 440px; }
 }
-
 @media (min-width: 1024px) {
-  #app {
-    max-width: 500px;
-  }
-}
-
-/* Tablet landscape - kasir mode */
-@media (min-width: 768px) and (orientation: landscape) {
-  body {
-    padding: 2rem;
-  }
-
-  .success-screen {
-    min-height: 450px;
-  }
+  #app { max-width: 460px; }
 }
 
 /* ========== GENERAL ========== */
-
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
 }
 
 /* Remove number input spinners */
@@ -144,7 +140,12 @@ input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+/* Button loading state */
+.btn-loading {
+  opacity: 0.7;
+  pointer-events: none;
 }

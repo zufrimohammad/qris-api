@@ -309,6 +309,50 @@ app.get('/ui/ui.js', () => {
     return new Response(js, { headers: { 'content-type': 'application/javascript; charset=utf-8' } });
 });
 
+// ============================================================
+// GET /api/check-status - Cek status transaksi (polling fallback)
+// Endpoint ini digunakan sebagai fallback jika WebSocket tidak tersedia.
+// Untuk integrasi dengan bank asli, ganti logika simulasi di bawah ini
+// dengan API call ke Moota/CekMutasi/BCA API.
+// ============================================================
+// INTEGRASI BANK ASLI (TODO):
+// 1. Moota: Gunakan API Key dari https://moota.co → panggil endpoint GET /mutation
+// 2. CekMutasi: Gunakan API Key dari https://cekmutasi.co.id → panggil endpoint cek mutasi
+// 3. BCA API: Gunakan OAuth client dari https://developer.bca.co.id → panggil /banking/v3/corporates/{corpId}/accounts/{accountNum}/statements
+// 4. Manual Scraper: Letakkan script scraping bank di folder /scraper dan panggil hasilnya di sini
+// ============================================================
+app.get('/api/check-status', ({ query }) => {
+    const q = query as any;
+    const transactionId = q?.transactionId;
+    if (!transactionId || typeof transactionId !== 'string') {
+        return new Response(JSON.stringify({ error: 'Parameter transactionId wajib diisi' }), {
+            status: 400,
+            headers: { 'content-type': 'application/json' }
+        });
+    }
+    const transaction = transactionService.findById(transactionId);
+    if (!transaction) {
+        return new Response(JSON.stringify({ error: 'Transaksi tidak ditemukan' }), {
+            status: 404,
+            headers: { 'content-type': 'application/json' }
+        });
+    }
+    return {
+        transactionId: transaction.transactionId,
+        status: transaction.status,
+        amount: transaction.amount,
+        originalAmount: transaction.originalAmount,
+        uniqueCode: transaction.uniqueCode,
+        merchantName: transaction.merchantName,
+        createdAt: transaction.createdAt
+    };
+}, {
+    detail: { summary: 'Cek status transaksi', tags: ['Cashier'] },
+    query: t.Object({
+        transactionId: t.String({ description: 'ID transaksi yang ingin dicek' })
+    })
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
